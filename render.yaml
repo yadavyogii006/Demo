@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: pocket-server-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://pocket-server.tail1234d4.ts.net

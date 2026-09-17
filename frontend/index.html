@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pocket Server</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230c0f0e'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23c8f542'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0f0e;
+      --bg-soft: #121615;
+      --surface: #171c1a;
+      --surface-2: #1e2522;
+      --border: rgba(200, 245, 66, 0.12);
+      --border-strong: rgba(232, 238, 233, 0.14);
+      --text: #e8eee9;
+      --muted: #8a9a91;
+      --accent: #c8f542;
+      --accent-dim: rgba(200, 245, 66, 0.14);
+      --danger: #ff7a6e;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    .atmosphere {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(900px 500px at 12% -10%, rgba(200, 245, 66, 0.08), transparent 55%),
+        radial-gradient(700px 420px at 100% 0%, rgba(125, 211, 192, 0.07), transparent 50%),
+        linear-gradient(180deg, #101412 0%, var(--bg) 40%);
+    }
+
+    .atmosphere::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232, 238, 233, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 238, 233, 0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at top, black 20%, transparent 75%);
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 64px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 8px 0 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
+      color: #111;
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .brand-copy { display: flex; flex-direction: column; }
+    .brand-copy strong { font-size: 14px; letter-spacing: 0.01em; }
+    .brand-copy span {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 999px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 4px rgba(138, 154, 145, 0.12);
+    }
+
+    .status.ok { color: var(--accent); border-color: rgba(200, 245, 66, 0.28); }
+    .status.ok .dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-dim);
+      animation: pulse 1.8s ease-out infinite;
+    }
+
+    .status.down { color: var(--danger); border-color: rgba(255, 122, 110, 0.35); }
+    .status.down .dot {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(255, 122, 110, 0.14);
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(200, 245, 66, 0.45); }
+      100% { box-shadow: 0 0 0 10px rgba(200, 245, 66, 0); }
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 12px 0 36px;
+    }
+
+    .kicker {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      font-family: Syne, sans-serif;
+      font-size: clamp(40px, 8vw, 76px);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      max-width: 14ch;
+    }
+
+    .lede {
+      max-width: 46ch;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: #111; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat span {
+      display: block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+    }
+
+    .stat strong {
+      font-family: Syne, sans-serif;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    section { margin-bottom: 36px; }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-family: Syne, sans-serif;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    .section-head p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .card, .panel {
+      background: linear-gradient(180deg, var(--surface-2), var(--surface));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      min-height: 180px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(200, 245, 66, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .card h3 {
+      font-family: Syne, sans-serif;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+    }
+
+    .card p { color: var(--muted); font-size: 14px; flex: 1; }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .skeleton {
+      min-height: 180px;
+      border-radius: var(--radius);
+      background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+      border: 1px solid var(--border);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    .empty, .error {
+      grid-column: 1 / -1;
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius);
+    }
+
+    .error { color: var(--danger); border-color: rgba(255, 122, 110, 0.4); }
+
+    .panel { min-height: 0; }
+
+    form {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0 12px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      background: #0e1210;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .reply {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 14px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #0e1210;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      min-height: 48px;
+    }
+
+    .reply.muted { color: var(--muted); }
+    .reply.bad { color: var(--danger); }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer a { color: var(--text); }
+
+    @media (max-width: 800px) {
+      .stats, .grid { grid-template-columns: 1fr; }
+      header { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="atmosphere"></div>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="/">
+        <div class="mark">PS</div>
+        <div class="brand-copy">
+          <strong>Pocket Server</strong>
+          <span>FastAPI on the local network</span>
+        </div>
+      </a>
+      <div id="status" class="status" aria-live="polite">
+        <span class="dot"></span>
+        <span>checking</span>
+      </div>
+    </header>
+
+    <section class="hero">
+      <p class="kicker">Local Android server</p>
+      <h1>A tiny API with a real front door.</h1>
+      <p class="lede">
+        This FastAPI app is serving from your machine (or phone) and exposing
+        health, projects, and a hello endpoint. The JSON is still there — this page just makes it usable.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#projects">Browse projects</a>
+        <a class="btn btn-ghost" data-api-path="/docs" href="/docs">Open API docs</a>
+      </div>
+    </section>
+
+    <div class="stats">
+      <div class="stat"><span>Health</span><strong id="health-value">—</strong></div>
+      <div class="stat"><span>Projects</span><strong id="project-count">—</strong></div>
+      <div class="stat"><span>Endpoints</span><strong>4</strong></div>
+    </div>
+
+    <section id="projects">
+      <div class="section-head">
+        <h2>Projects</h2>
+        <p>Loaded live from <code>/api/projects</code></p>
+      </div>
+      <div id="project-grid" class="grid">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Say hello</h2>
+        <p>Calls <code>/hello/{name}</code></p>
+      </div>
+      <div class="panel">
+        <p class="lede">Try the greeting endpoint without leaving this page.</p>
+        <form id="hello-form">
+          <input id="name-input" type="text" name="name" placeholder="Your name" autocomplete="nickname" maxlength="40" />
+          <button class="btn btn-primary" type="submit">Send</button>
+        </form>
+        <div id="hello-reply" class="reply muted">Waiting for a name…</div>
+      </div>
+    </section>
+
+    <footer>
+      <span>JSON still available at <a data-api-path="/health" href="/health">/health</a>, <a data-api-path="/api/projects" href="/api/projects">/api/projects</a>, and <a data-api-path="/hello/Ada" href="/hello/Ada">/hello/Ada</a></span>
+      <span>Uvicorn · FastAPI</span>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
