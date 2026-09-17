@@ -4,9 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="Android FastAPI Server")
 
 ALLOWED_ORIGINS = [
-    "https://pocket-server.yogesh-yadav.is-a.dev",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "https://pocket-server.yogesh-yadav.is-a.dev"
 ]
 
 app.add_middleware(
